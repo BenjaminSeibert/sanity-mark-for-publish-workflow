@@ -2,17 +2,23 @@
 import defaultResolve from 'part:@sanity/base/document-actions'
 import {
   DeleteAction,
+  UnpublishAction,
+  PublishAction
 } from 'part:@sanity/base/document-actions';
 
 import {markableTypes} from './config/workflow'
-import { MarkForPublishAction} from './MarkForPublishAction'
+import { MarkForPublishAction} from './markForPublishAction'
+import { LoadingAction } from './loadingAction';
+import { UnmarkForPublishAction } from './unmarkForPublishAction';
 
 function resolveMarkForPublishWorkflow(props) {
   return [
+    LoadingAction,
     MarkForPublishAction,
+    UnmarkForPublishAction,
+    PublishAction,
+    UnpublishAction,
     DeleteAction,
-    // UnpublishAction,
-    // UnmarkAction
   ]
 }
 

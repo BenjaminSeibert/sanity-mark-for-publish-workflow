@@ -3,6 +3,7 @@ export default {
   type: 'document',
     title: 'Publish Metadata',
   fields: [
+    {type: 'string', name: 'title', title: 'Page Title'},
     {type: 'string', name: 'documentId', title: 'Document ID'},
     {type: 'string', name: 'revId', title: 'Revision ID'},
   ]

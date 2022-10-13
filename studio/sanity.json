@@ -11,7 +11,9 @@
     "@sanity/base",
     "@sanity/default-layout",
     "@sanity/default-login",
-    "@sanity/desk-tool"
+    "@sanity/desk-tool",
+    "publishing",
+    "cat-widget"
   ],
   "env": {
     "development": {
@@ -29,9 +31,9 @@
       "implements": "part:@sanity/base/root",
       "path": "plugins/sanity-plugin-tutorial/CustomDefaultLayout"
     },
-    { 
-    "implements": "part:@sanity/base/document-actions/resolver", 
-    "path": "resolveDocumentActions.js" 
-  } 
+    {
+      "implements": "part:@sanity/base/document-actions/resolver",
+      "path": "resolveDocumentActions.js"
+    }
   ]
 }
