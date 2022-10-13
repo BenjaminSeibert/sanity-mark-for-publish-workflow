@@ -1,5 +1,5 @@
-import React from 'react'
-import {Box, Text, Stack} from '@sanity/ui'
+import React, {useEffect, useState} from 'react'
+import {Box, Button, Stack} from '@sanity/ui'
 import sanityClient from 'part:@sanity/base/client';
 
 const client = sanityClient.withConfig({
@@ -8,33 +8,32 @@ const client = sanityClient.withConfig({
 });
 
 
+
 function Publishing() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [imageUrl, setImageUrl] = useState(null);
-
-  const query= `*[_type == 'animal' && _id in *[_type == 'publish.metadata'].documentId && _rev in *[_type == 'publish.metadata'].revId]`;
+const [pages, setPages] = useState([]);
 
 
-  const getPages = async() => {
-    const pages = await client.fetch(query);
-  };
+
+const query= `*[_type == 'animal' && _id in *[_type == 'publish.metadata'].documentId && _rev in *[_type == 'publish.metadata'].revId]`;
+const getPages = async() => {
+  const pages = await client.fetch(query);
+  setPages(pages)
+};
 
   useEffect(() => {
-    getPages();
+    getPages()
   }, []);
-
-  useEffect(() => {
-    
-  console.log(pages)
-  }, [pages]);
 
     return (
       <Box padding={4} paddingY={5}>
-        <Stack space={4}>
-          {pages.map(page => {
-            return <div>test</div>
-          })}
+        <Stack>
+          <Stack space={4}>
+            {pages.length && pages.map(page => {
+              console.log(page)
+              return <div><h2>{page.title}</h2><span>{page._id}</span></div>
+            })}
+          </Stack>
+          <Button onClick>Publish marked pages</Button>
         </Stack>
       </Box>
     )
