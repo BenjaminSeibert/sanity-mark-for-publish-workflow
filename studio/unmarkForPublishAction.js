@@ -10,10 +10,11 @@ export function UnmarkForPublishAction(props) {
 
   const marked = data.draft && props.draft && data.draft.revId === props.draft._rev;
 
-  return marked ? {
+  return {
     label: 'Unmark',
+    disabled: !marked,
     onHandle: () => {
       unmarkForPublish(ops)
     },
-  } : null
+  }
 }
