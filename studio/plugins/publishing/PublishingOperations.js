@@ -13,7 +13,7 @@ export function performPublishingOperation(page) {
   // Problem: invalid Hook Calls
 
     // const pageOps = useDocumentOperation(page._id, 'animal');
-    // const metaOps = useDocumentOperation(`publish-metadata.${page._id}`, 'publish.metadata');
+    // // const metaOps = useDocumentOperation(`publish-metadata.${page._id}`, 'publish.metadata');
     //   pageOps.patch.execute([{set: {_id: page._id.replace('drafts.','')}}])
 
       // Method 2: Sanity Client fetch
@@ -75,10 +75,15 @@ const postOptions = {
     // .then( data => console.log("post",data) );
 
     // Method 4: publish and delete operation
-      publish(page._id.replace('drafts.',''), page._rev)
-      console.log("delete metadata: ",page._id)
+      // publish(page._id.replace('drafts.',''), page._rev)
+
+
+
+      // Combined
+      console.log("publish and delete metadata: ",page._id)
       // fetch(postUrl, postOptions).then( res => res.json() ).then( data => console.log("post",data) );
-      // client.delete(`drafts.publish-metadata${page._id.replace("drafts.","")}`);
+     s // client.delete(`drafts.publish-metadata${page._id.replace("drafts.","")}`);
+
     }
     catch (err){
         console.log(err)
