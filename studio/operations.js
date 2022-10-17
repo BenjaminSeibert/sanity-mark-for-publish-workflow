@@ -14,21 +14,21 @@ function fetchSnapshots(documentId) {
 export async function publish(documentId, revisionId, ) {
   if (!revisionId) throw new Error(`missing revision ID for ${documentId}`)
 
-  // const snapshots = await fetchSnapshots(documentId)
+  const snapshots = await fetchSnapshots(documentId)
   const idPair = {draftId: `drafts.${documentId}`, publishedId: documentId}
-  // const latest = snapshots.draft || snapshots.published
+  const latest = snapshots.draft || snapshots.published
 
-  // if (!snapshots.draft) {
-  //   throw new Error(`no draft to publish: ${documentId}`)
-  // }
+  if (!snapshots.draft) {
+    throw new Error(`no draft to publish: ${documentId}`)
+  }
 
-  // if (!latest) throw new Error(`document not found: ${documentId}`)
+  if (!latest) throw new Error(`document not found: ${documentId}`)
 
-  // const typeName = latest._type
-  // const type = schema.get(typeName)
+  const typeName = latest._type
+  const type = schema.get(typeName)
 
   if (!type) throw new Error(`document type not found: ${typeName}`)
-  // if (type.liveEdit) throw new Error(`cannot publish live edit documents: ${typeName}`)
+  if (type.liveEdit) throw new Error(`cannot publish live edit documents: ${typeName}`)
 
   const tx = client.transaction()
 
@@ -57,30 +57,3 @@ export async function publish(documentId, revisionId, ) {
   return tx.commit()
 }
 
-// TODO: pass `revisionId` as argument
-export async function unpublish(documentId, revisionId) {
-  if (!revisionId) throw new Error(`missing revision ID for ${documentId}`)
-
-  const snapshots = await fetchSnapshots(documentId)
-  const idPair = {draftId: `drafts.${documentId}`, publishedId: documentId}
-  const latest = snapshots.draft || snapshots.published
-
-  if (!latest) throw new Error(`document not found: ${documentId}`)
-
-  const typeName = latest._type
-  const type = schema.get(typeName)
-
-  if (!type) throw new Error(`document type not found: ${typeName}`)
-  if (type.liveEdit) throw new Error(`cannot unpublish live edit documents: ${typeName}`)
-
-  let tx = client.observable.transaction().delete(idPair.publishedId)
-
-  if (snapshots.published) {
-    tx = tx.createIfNotExists({
-      ...omit(snapshots.published, '_updatedAt'),
-      _id: idPair.draftId
-    })
-  }
-
-  return tx.commit()
-}

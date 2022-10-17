@@ -10,7 +10,7 @@ const client = sanityClient.withConfig({
 
 function publishPages(pages){
   pages.map(page => {
-    performPublishingOperation(page)  
+    performPublishingOperation(page)
   })
 }
 
@@ -31,7 +31,6 @@ function Publishing() {
         <Stack>
           <Stack space={4}>
             {pages.length && pages.map(page => {
-              console.log("mapped page", page)
               return <div><h2>{page.title}</h2><span>{page._id}</span></div>
             })}
           </Stack>
