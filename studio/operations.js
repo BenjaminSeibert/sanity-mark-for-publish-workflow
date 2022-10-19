@@ -11,10 +11,12 @@ function fetchSnapshots(documentId) {
   })
 }
 
-export async function publish(documentId, revisionId, ) {
+export async function publish(documentId, revisionId) {
+  console.log(documentId, revisionId)
   if (!revisionId) throw new Error(`missing revision ID for ${documentId}`)
 
   const snapshots = await fetchSnapshots(documentId)
+  console.log("snapshots: ",snapshots)
   const idPair = {draftId: `drafts.${documentId}`, publishedId: documentId}
   const latest = snapshots.draft || snapshots.published
 
@@ -32,27 +34,28 @@ export async function publish(documentId, revisionId, ) {
 
   const tx = client.transaction()
 
-  if (snapshots.published) {
-    // If it exists already, we only want to update it if the revision on the remote server
-    // matches what our local state thinks it's at
-    tx.patch(idPair.publishedId, {
-      // Hack until other mutations support revision locking
-      unset: ['_revision_lock_pseudo_field_'],
-      ifRevisionID: revisionId
-    }).createOrReplace({
-      ...omit(snapshots.draft, '_updatedAt'),
-      _id: idPair.publishedId
-    })
-  } else {
+  // if (snapshots.published) {
+  //   // If it exists already, we only want to update it if the revision on the remote server
+  //   // matches what our local state thinks it's at
+  //   tx.patch(idPair.publishedId, {
+  //     // Hack until other mutations support revision locking
+  //     unset: ['_revision_lock_pseudo_field_'],
+  //     ifRevisionID: revisionId
+  //   }).createOrReplace({
+  //     ...omit(snapshots.draft, '_updatedAt'),
+  //     _id: idPair.publishedId
+  //   })
+  // } else {
     // If the document has not been published, we want to create it - if it suddenly exists
     // before being created, we don't want to overwrite if, instead we want to yield an error
-    tx.create({
+    tx.createOrReplace({
       ...omit(snapshots.draft, '_updatedAt'),
       _id: idPair.publishedId
     })
-  }
+  // }
 
   tx.delete(idPair.draftId)
+  tx.delete(`drafts.publish-metadata.${idPair.publishedId}`)
 
   return tx.commit()
 }
