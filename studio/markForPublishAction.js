@@ -15,8 +15,6 @@ export function MarkForPublishAction(props) {
   const ops = useDocumentOperation(`publish-metadata.${props.id}`, 'publish.metadata')
   const data = useEditState(`publish-metadata.${props.id}`, 'publish.metadata')
 
-  // console.log("data",data, "ops", ops)
-  console.log(props)
   // is document draft
   if (!props.draft) {
     return null

@@ -20,8 +20,8 @@ export default () => (
     <path
       d="M4.99997 5.50005H20M7.5 14L12.5 9.00003L17.5 14"
       stroke="currentColor"
-      stroke-width="1.2"
+      strokeWidth="1.2"
     ></path>
-    <path d="M12.5 9.00003V20" stroke="currentColor" stroke-width="1.2"></path>
+    <path d="M12.5 9.00003V20" stroke="currentColor" strokeWidth="1.2"></path>
   </svg>
 );

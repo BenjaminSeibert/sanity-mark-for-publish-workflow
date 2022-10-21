@@ -11,52 +11,66 @@ function fetchSnapshots(documentId) {
   })
 }
 
-export async function publish(documentId, revisionId) {
-  console.log(documentId, revisionId)
-  if (!revisionId) throw new Error(`missing revision ID for ${documentId}`)
+export async function publishPages(pages, removePages) {
+  await pages.map(page => publish(page._id.replace('drafts.', ''), page._rev))
+  removePages(pages)
+}
 
-  const snapshots = await fetchSnapshots(documentId)
-  console.log("snapshots: ",snapshots)
-  const idPair = {draftId: `drafts.${documentId}`, publishedId: documentId}
-  const latest = snapshots.draft || snapshots.published
+async function publish(documentId, revisionId) {
+  try {
 
-  if (!snapshots.draft) {
-    throw new Error(`no draft to publish: ${documentId}`)
+    if (!revisionId) throw new Error(`missing revision ID for ${documentId}`)
+
+    const snapshots = await fetchSnapshots(documentId)
+    console.log("snapshots: ",snapshots)
+    const idPair = {draftId: `drafts.${documentId}`, publishedId: documentId}
+    const latest = snapshots.draft || snapshots.published
+  
+    if (!snapshots.draft) {
+      throw new Error(`no draft to publish: ${documentId}`)
+    }
+  
+    if (!latest) throw new Error(`document not found: ${documentId}`)
+  
+    const typeName = latest._type
+    const type = schema.get(typeName)
+  
+    if (!type) throw new Error(`document type not found: ${typeName}`)
+    if (type.liveEdit) throw new Error(`cannot publish live edit documents: ${typeName}`)
+  
+    const tx = client.transaction()
+  
+    // if (snapshots.published) {
+    //   // If it exists already, we only want to update it if the revision on the remote server
+    //   // matches what our local state thinks it's at
+    //   tx.patch(idPair.publishedId, {
+    //     // Hack until other mutations support revision locking
+    //     unset: ['_revision_lock_pseudo_field_'],
+    //     ifRevisionID: revisionId
+    //   }).createOrReplace({
+    //     ...omit(snapshots.draft, '_updatedAt'),
+    //     _id: idPair.publishedId
+    //   })
+    // } else {
+  
+  
+      // If the document has not been published, we want to create it - if it suddenly exists
+      // before being created, we don't want to overwrite if, instead we want to yield an error
+      await tx.createOrReplace({
+        ...omit(snapshots.draft, '_updatedAt'),
+        _id: idPair.publishedId
+      })
+    // }
+  
+    await tx.delete(idPair.draftId)
+    await tx.delete(`drafts.publish-metadata.${idPair.publishedId}`) 
+  
+  console.log("performed operations for ", idPair.publishedId)
+
+    return tx.commit()
   }
-
-  if (!latest) throw new Error(`document not found: ${documentId}`)
-
-  const typeName = latest._type
-  const type = schema.get(typeName)
-
-  if (!type) throw new Error(`document type not found: ${typeName}`)
-  if (type.liveEdit) throw new Error(`cannot publish live edit documents: ${typeName}`)
-
-  const tx = client.transaction()
-
-  // if (snapshots.published) {
-  //   // If it exists already, we only want to update it if the revision on the remote server
-  //   // matches what our local state thinks it's at
-  //   tx.patch(idPair.publishedId, {
-  //     // Hack until other mutations support revision locking
-  //     unset: ['_revision_lock_pseudo_field_'],
-  //     ifRevisionID: revisionId
-  //   }).createOrReplace({
-  //     ...omit(snapshots.draft, '_updatedAt'),
-  //     _id: idPair.publishedId
-  //   })
-  // } else {
-    // If the document has not been published, we want to create it - if it suddenly exists
-    // before being created, we don't want to overwrite if, instead we want to yield an error
-    tx.createOrReplace({
-      ...omit(snapshots.draft, '_updatedAt'),
-      _id: idPair.publishedId
-    })
-  // }
-
-  tx.delete(idPair.draftId)
-  tx.delete(`drafts.publish-metadata.${idPair.publishedId}`)
-
-  return tx.commit()
+  catch (err) {
+    return err
+  }
 }
 

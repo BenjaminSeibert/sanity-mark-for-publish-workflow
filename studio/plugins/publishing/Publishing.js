@@ -4,7 +4,7 @@ import sanityClient from "part:@sanity/base/client";
 import { performPublishingOperation } from "./PublishingOperations";
 import { PageListItem } from "./components/PageListItem";
 import { useRef } from "react";
-import { publish } from "../../operations";
+import { publishPages } from "../../operations";
 
 const client = sanityClient.withConfig({
   //TODO im Bemer projekt mit SANITY_API_VERSION ersetzen
@@ -13,21 +13,17 @@ const client = sanityClient.withConfig({
 
 function Publishing() {
   const [pages, setPages] = useState([]);
+  const [markedPages, setMarkedPages] = useState([])
   
   const query = `*[_type == 'animal' && _id in *[_type == 'publish.metadata'].documentId && _rev in *[_type == 'publish.metadata'].revId]`;
   
-  
   const getPages = async () => {
-    client.fetch(query).then((result) => setPages(result));
+    console.log("updating pages")
+    const result = await client.fetch(query)
+    console.log("pages",result)
+    setPages(result);
   };
   
-  function publishPages(pages) {
-    pages.map((page) => {
-      console.log("mapped page", page)
-      publish(page._id.replace('drafts.', ''), page._rev);
-    })
-    getPages();
-  }
   useEffect(() => {
     getPages();
   }, []);
@@ -40,11 +36,39 @@ function Publishing() {
   // }, [pages]);
 
   const removePage = (id) => {
-    const newPageArr = pages.filter((page) => page._id !== id);
-    setPages(newPageArr);
+    console.log("removing page ",id)
+    const newPageArr = pages.filter((page) => page._id !== `drafts.${id}`);
+    console.log("expected new state of pages",newPageArr)
+    setPages(newPageArr.filter(page => page !== null));
+    return;
   };
 
+  const removePages = (removedPages) => {
+    const newPageArr = pages.map(page => {
+      const idx = removedPages.indexOf(page)
+      if (idx < 0) {
+        return page
+      }
+      return null
+    }).filter(page => page !== null)
+    setPages(newPageArr)
+    return;
+  };
 
+  const markPage = (page) => {
+    setMarkedPages(markedPages.concat(page))
+  }
+  const unmarkPage = (page) => {
+    setMarkedPages(markedPages.filter(markedPage => markedPage._id !== page._id))
+  }
+
+  useEffect(() => {
+    console.log("markedPages",markedPages)
+  }, [markedPages]);
+
+  useEffect(() => {
+    console.log("pages", pages)
+  }, [pages])
 
   return (
     <Box padding={4} paddingY={5}>
@@ -54,10 +78,10 @@ function Publishing() {
             pages.map((page, index) => {
               return (
                 <PageListItem
-                  key={page._id}
-                  id={page._id}
-                  title={page.title}
+                  page={page}
                   removePage={() => removePage(page._id)}
+                  markPage={() => markPage(page)}
+                  unmarkPage={() => unmarkPage(page)}
                 />
               );
             })
@@ -66,9 +90,14 @@ function Publishing() {
           )}
         </Stack>
 
-        <Button onClick={() => publishPages(pages)}>
+        <div style={{display: 'flex', justifyContent: 'space-around'}}>
+          <Button onClick={() => publishPages(markedPages, removePages)} style={{width: '40%', textAlign: 'center'}}>
           Publish marked pages
         </Button>
+        <Button onClick={() => publishPages(pages,removePages)}  style={{width: '40%', textAlign: 'center'}}>
+          Publish all pages
+        </Button>
+          </div>
       </Stack>
     </Box>
   );

@@ -11,7 +11,7 @@ export default {
       {
         name: 'food',
         type: 'string',
-        title: 'Favorite Food'
+        title: 'description'
       }
     ]
   }

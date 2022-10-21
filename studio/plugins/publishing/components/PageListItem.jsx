@@ -1,25 +1,36 @@
 import { useDocumentOperation } from "@sanity/react-hooks";
-import React from "react";
+import React, { useState, useEffect } from "react";
 
-const PageListItem = ({ id, title, removePage }) => {
-  const documentId = id.replace("drafts.", "");
+const PageListItem = ({ page, markPage, unmarkPage }) => {
+  const [checked, setChecked] = useState(false);
+  const documentId = page._id.replace("drafts.", "");
   const pageOps = useDocumentOperation(documentId, "animal");
   const metaOps = useDocumentOperation(
     `publish-metadata.${documentId}`,
     "publish.metadata"
   );
 
-  const onPublishHandler = () => {
+  const onPublishHandler = (id) => {
     pageOps.publish.execute();
     metaOps.delete.execute();
-    removePage();
+    removePage(id);
   };
 
+  useEffect(() => {
+    if(checked){
+      markPage(page)
+    }
+    else {
+      unmarkPage(page)
+    }
+  },[checked])
+
   return (
-    <div>
-      <h2>{title}</h2>
-      <span>{id}</span>
-      <button onClick={() => onPublishHandler()}>publish</button>
+    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+      <input type='checkbox' value='publish?' onChange={() => setChecked(!checked)}  />
+      <h2>{page.title}</h2>
+      <span>{page._id}</span>
+      <button onClick={() => onPublishHandler(page._id)}>publish</button>
     </div>
   );
 };
